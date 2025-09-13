@@ -166,8 +166,8 @@
   },
   "autobuy": {
     "All": "Automatisch alle kaufen",
-    "Premium": "Automatisch Premium-Farben kaufen",
-    "None": "Nicht automatisch kaufen"
+    "AllAccountsTitle": "Automatisch alle Konten kaufen",
+    "AllAccountsSub": "Automatisch alle Konten auf einmal kaufen"
   }
 }
 

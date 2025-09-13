@@ -166,8 +166,8 @@
   },
   "autobuy": {
     "All": "Compra automática de todo",
-    "Premium": "Compra automática de colores premium",
-    "None": "Sin compra automática"
+    "AllAccountsTitle": "Compra automática de todas las cuentas",
+    "AllAccountsSub": "Configurar compra automática para todas las cuentas a la vez"
   }
 }
 

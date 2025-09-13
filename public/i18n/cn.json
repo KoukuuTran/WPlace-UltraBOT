@@ -166,7 +166,7 @@
   },
   "autobuy": {
     "All": "自动购买全部",
-    "Premium": "自动购买高级颜色",
-    "None": "不自动购买"
+    "AllAccountsTitle": "所有账户自动购买",
+    "AllAccountsSub": "一次性为所有账户设置自动购买"
   }
 }

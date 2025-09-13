@@ -166,8 +166,8 @@
   },
   "autobuy": {
     "All": "Achat auto de tout",
-    "Premium": "Achat auto de couleurs premium",
-    "None": "Pas d'achat auto"
+    "AllAccountsTitle": "Achat auto de tous les comptes",
+    "AllAccountsSub": "Définir l'achat automatique pour tous les comptes en une seule fois"
   }
 }
 

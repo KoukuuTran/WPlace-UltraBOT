@@ -166,8 +166,8 @@
   },
   "autobuy": {
     "All": "Tümünü oto satın al",
-    "Premium": "Premium renkleri oto satın al",
-    "None": "Oto satın alma yok"
+    "AllAccountsTitle": "Tüm Hesapları Oto Satın Al",
+    "AllAccountsSub": "Tüm hesaplar için oto satın almayı bir kerede ayarla"
   }
 }
 

@@ -169,8 +169,8 @@
   },
   "autobuy": {
     "All": "Auto-buy all",
-    "Premium": "Auto-buy premium colors",
-    "None": "No auto-buy"
+    "AllAccountsTitle": "Auto Buy All Accounts",
+    "AllAccountsSub": "Set autobuy for all accounts at once"
   }
 }
 

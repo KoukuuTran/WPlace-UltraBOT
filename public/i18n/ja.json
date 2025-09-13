@@ -166,8 +166,8 @@
   },
   "autobuy": {
     "All": "すべて自動購入",
-    "Premium": "プレミアムカラーを自動購入",
-    "None": "自動購入しない"
+    "AllAccountsTitle": "すべてのアカウントを自動購入",
+    "AllAccountsSub": "すべてのアカウントの自動購入を一括設定"
   }
 }
 
