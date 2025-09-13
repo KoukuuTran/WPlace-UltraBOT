@@ -1,6 +1,7 @@
 {
   "nav": {
-    "accounts": "Comptes"
+    "accounts": "Comptes",
+    "accountCount": "Nombre de comptes : {count}"
   },
   "pixel": {
     "powerLabel": "Puissance de pixels : {count} / {max}"
@@ -162,6 +163,11 @@
     "saveTitle": "Enregistrer l’emplacement",
     "nameLabel": "Nom",
     "load": "Charger"
+  },
+  "autobuy": {
+    "All": "Achat auto de tout",
+    "Premium": "Achat auto de couleurs premium",
+    "None": "Pas d'achat auto"
   }
 }
 

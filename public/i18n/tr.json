@@ -1,6 +1,7 @@
 {
   "nav": {
-    "accounts": "Hesaplar"
+    "accounts": "Hesaplar",
+    "accountCount": "Hesap sayısı: {count}"
   },
   "pixel": {
     "powerLabel": "Piksel gücü: {count} / {max}"
@@ -162,6 +163,11 @@
     "saveTitle": "Konumu kaydet",
     "nameLabel": "Ad",
     "load": "Yükle"
+  },
+  "autobuy": {
+    "All": "Tümünü oto satın al",
+    "Premium": "Premium renkleri oto satın al",
+    "None": "Oto satın alma yok"
   }
 }
 

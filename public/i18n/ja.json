@@ -1,6 +1,7 @@
 {
   "nav": {
-    "accounts": "アカウント"
+    "accounts": "アカウント",
+    "accountCount": "アカウント数: {count}"
   },
   "pixel": {
     "powerLabel": "ピクセルパワー: {count} / {max}"
@@ -162,6 +163,11 @@
     "saveTitle": "場所を保存",
     "nameLabel": "名前",
     "load": "読み込む"
+  },
+  "autobuy": {
+    "All": "すべて自動購入",
+    "Premium": "プレミアムカラーを自動購入",
+    "None": "自動購入しない"
   }
 }
 

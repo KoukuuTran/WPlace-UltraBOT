@@ -1,6 +1,7 @@
 {
   "nav": {
-    "accounts": "Konten"
+    "accounts": "Konten",
+    "accountCount": "Kontenzahl: {count}"
   },
   "pixel": {
     "powerLabel": "Pixelkraft: {count} / {max}"
@@ -162,6 +163,11 @@
     "saveTitle": "Position speichern",
     "nameLabel": "Name",
     "load": "Laden"
+  },
+  "autobuy": {
+    "All": "Automatisch alle kaufen",
+    "Premium": "Automatisch Premium-Farben kaufen",
+    "None": "Nicht automatisch kaufen"
   }
 }
 

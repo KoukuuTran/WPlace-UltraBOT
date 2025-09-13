@@ -1,6 +1,7 @@
 {
   "nav": {
-    "accounts": "账户"
+    "accounts": "账户",
+    "accountCount": "账户数量：{count}"
   },
   "pixel": {
     "powerLabel": "点数：{count} / {max}"
@@ -162,5 +163,10 @@
     "saveTitle": "保存位置",
     "nameLabel": "名称",
     "load": "加载"
+  },
+  "autobuy": {
+    "All": "自动购买全部",
+    "Premium": "自动购买高级颜色",
+    "None": "不自动购买"
   }
 }

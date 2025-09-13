@@ -1,6 +1,7 @@
 {
   "nav": {
-    "accounts": "Accounts"
+    "accounts": "Accounts",
+    "accountCount": "Account count: {count}"
   },
   "pixel": {
     "powerLabel": "Pixel power: {count} / {max}"
@@ -165,6 +166,11 @@
     "saveTitle": "Save location",
     "nameLabel": "Name",
     "load": "Load"
+  },
+  "autobuy": {
+    "All": "Auto-buy all",
+    "Premium": "Auto-buy premium colors",
+    "None": "No auto-buy"
   }
 }
 
