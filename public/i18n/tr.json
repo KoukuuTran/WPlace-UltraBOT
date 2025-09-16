@@ -1,10 +1,11 @@
 {
   "nav": {
     "accounts": "Hesaplar",
-    "accountCount": "Hesap sayısı: {count}"
+    "accountCount": "Hesap sayısı: {active} / {total}"
   },
   "pixel": {
-    "powerLabel": "Piksel gücü: {count} / {max}"
+    "powerLabel": "Piksel gücü: {count} / {max}",
+    "brushSize": "Fırça boyutu (Shift+Boşluk):"
   },
   "ready": {
     "prepare": "Hazırlan",
@@ -80,7 +81,11 @@
     "ditheringOn": "Dithering: ON",
     "ditheringOff": "Dithering: OFF"
   },
-  "settings": {},
+  "settings": {
+    "cf_clearance": "cf_clearance",
+    "globalCfClearanceLabel": "cf_clearance:",
+    "title": "Boş Hesaplar için cf_clearance"
+  },
   "mosaic": {
     "title": "Mozaik",
     "use2": "2 kord kullan",

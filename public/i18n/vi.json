@@ -1,10 +1,11 @@
 {
   "nav": {
     "accounts": "Tài khoản",
-    "accountCount": "Số lượng tài khoản: {count}"
+    "accountCount": "Số lượng tài khoản: {active} / {total}"
   },
   "pixel": {
-    "powerLabel": "Sức mạnh pixel: {count} / {max}"
+    "powerLabel": "Sức mạnh pixel: {count} / {max}",
+    "brushSize": "Kích thước cọ (Shift+Space):"
   },
   "ready": {
     "prepare": "Sẵn sàng",
@@ -82,7 +83,9 @@
     "ditheringOff": "Dithering: TẮT"
   },
   "settings": {
-    "cf_clearance": "cf_clearance"
+    "cf_clearance": "cf_clearance",
+    "globalCfClearanceLabel": "cf_clearance:",
+    "title": "cf_clearance Cho Tài Khoản Trống"
   },
   "mosaic": {
     "title": "Ghép ảnh (Mosaic)",

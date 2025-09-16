@@ -1,10 +1,11 @@
 {
   "nav": {
     "accounts": "Comptes",
-    "accountCount": "Nombre de comptes : {count}"
+    "accountCount": "Nombre de comptes : {active} / {total}"
   },
   "pixel": {
-    "powerLabel": "Puissance de pixels : {count} / {max}"
+    "powerLabel": "Puissance de pixels : {count} / {max}",
+    "brushSize": "Taille du pinceau (Shift+Espace) :"
   },
   "ready": {
     "prepare": "Prêt",
@@ -82,7 +83,9 @@
     "ditheringOff": "Dithering: OFF"
   },
   "settings": {
-    "cf_clearance": "cf_clearance"
+    "cf_clearance": "cf_clearance",
+    "globalCfClearanceLabel": "cf_clearance:",
+    "title": "cf_clearance pour les comptes vides"
   },
   "mosaic": {
     "title": "Mosaïque",

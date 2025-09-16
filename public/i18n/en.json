@@ -1,10 +1,11 @@
 {
   "nav": {
     "accounts": "Accounts",
-    "accountCount": "Account count: {count}"
+    "accountCount": "Account count: {active} / {total}"
   },
   "pixel": {
-    "powerLabel": "Pixel power: {count} / {max}"
+    "powerLabel": "Pixel power: {count} / {max}",
+    "brushSize": "Brush Size (Shift+Space):"
   },
   "ready": {
     "prepare": "Ready",
@@ -82,7 +83,9 @@
     "ditheringOff": "Dithering: OFF"
   },
   "settings": {
-    "cf_clearance": "cf_clearance"
+    "cf_clearance": "cf_clearance",
+    "globalCfClearanceLabel": "cf_clearance:",
+    "title": "cf_clearance For Empty Accounts"
   },
   "mosaic": {
     "title": "Mosaic",

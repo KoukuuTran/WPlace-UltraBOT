@@ -331,7 +331,9 @@ async function purchaseProduct(cf_clearance, token, productId, amount) {
 async function refreshAccount(account) {
   if (!account) return account;
 
-  const cf = account.cf_clearance || '';
+  const settings = readJson(SETTINGS_FILE, {});
+  const globalCf = (settings && settings.cf_clearance) || '';
+  const cf = account.cf_clearance || globalCf;
   if (!cf || cf.length < 30 || !account.token) {
     account.active = false;
     return account;
@@ -586,7 +588,9 @@ function startServer(port, host) {
           // Use cf_clearance stored on the specific account matching this token
           const accounts = readJson(ACCOUNTS_FILE, []);
           const acc = accounts.find(a => a && typeof a.token === 'string' && a.token === jToken);
-          const cf = acc && typeof acc.cf_clearance === 'string' ? acc.cf_clearance : '';
+          const settings = readJson(SETTINGS_FILE, {});
+          const globalCf = (settings && settings.cf_clearance) || '';
+          const cf = (acc && acc.cf_clearance) || globalCf;
           if (!cf || cf.length < 30) {
             try { deactivateAccountByToken(jToken); } catch {}
             res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
@@ -701,7 +705,9 @@ function startServer(port, host) {
           }
           const accounts = readJson(ACCOUNTS_FILE, []);
           const acc = accounts.find(a => a && typeof a.token === 'string' && a.token === jToken);
-          const cf = acc && typeof acc.cf_clearance === 'string' ? acc.cf_clearance : '';
+          const settings = readJson(SETTINGS_FILE, {});
+          const globalCf = (settings && settings.cf_clearance) || '';
+          const cf = (acc && acc.cf_clearance) || globalCf;
           if (!cf || cf.length < 30) {
             try { deactivateAccountByToken(jToken); } catch {}
             res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
@@ -794,10 +800,16 @@ function startServer(port, host) {
     if (parsed.pathname === '/api/accounts' && req.method === 'GET') {
       const accounts = readJson(ACCOUNTS_FILE, []);
       try {
+        const settings = readJson(SETTINGS_FILE, {}); // Đọc settings chung
+        const globalCf = (settings && settings.cf_clearance) || '';
+
         for (let i = 0; i < accounts.length; i++) {
           const a = accounts[i];
-          const cf = a && typeof a.cf_clearance === 'string' ? a.cf_clearance : '';
-          if (!cf || cf.length < 30) { accounts[i] = { ...a, active: false }; }
+          const effectiveCf = (a && a.cf_clearance) || globalCf; // Dùng cf hiệu lực
+          // Chỉ đặt inactive nếu cả cf riêng và chung đều không hợp lệ
+          if (!effectiveCf || effectiveCf.length < 30) { 
+            accounts[i] = { ...a, active: false }; 
+          }
         }
         writeJson(ACCOUNTS_FILE, accounts);
       } catch {}
@@ -842,10 +854,11 @@ function startServer(port, host) {
         if (body.pixelRight != null) updated.pixelRight = body.pixelRight;
         if (typeof body.active === 'boolean') updated.active = body.active;
         if (body.autobuy === null) { updated.autobuy = null; }
-        else if (body.autobuy === 'max' || body.autobuy === 'rec') { updated.autobuy = body.autobuy; }
         try {
-          const cf = updated && typeof updated.cf_clearance === 'string' ? updated.cf_clearance : '';
-          if (!cf || cf.length < 30) updated.active = false;
+          const settings = readJson(SETTINGS_FILE, {});
+          const globalCf = (settings && settings.cf_clearance) || '';
+          const effectiveCf = (updated && updated.cf_clearance) || globalCf;
+          if (!effectiveCf || effectiveCf.length < 30) updated.active = false;
         } catch {}
         accounts[idx] = updated;
         writeJson(ACCOUNTS_FILE, accounts);
@@ -858,28 +871,66 @@ function startServer(port, host) {
       return;
     }
     // Settings endpoints removed; cf_clearance is now per-account
+    if (parsed.pathname === '/api/settings' && req.method === 'GET') {
+      const settings = readJson(SETTINGS_FILE, { cf_clearance: '', worldX: null, worldY: null });
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify(settings));
+      return;
+    }
+    if (parsed.pathname === '/api/settings' && req.method === 'POST') {
+      readJsonBody(req).then((body) => {
+        const existing = readJson(SETTINGS_FILE, { cf_clearance: '', worldX: null, worldY: null });
+        const newCf = (body && typeof body.cf_clearance === 'string') ? body.cf_clearance : '';
+        const updated = { ...existing, cf_clearance: newCf };
+        writeJson(SETTINGS_FILE, updated);
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ ok: true }));
+      }).catch(() => {
+        res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ error: 'invalid json' }));
+      });
+      return;
+    }
+
     if (parsed.pathname === '/api/accounts' && req.method === 'POST') {
       readJsonBody(req).then(async (body) => {
         const name = (body && body.name) ? String(body.name) : '';
         const token = (body && body.token) ? String(body.token) : '';
         const cf_clearance = (body && body.cf_clearance) ? String(body.cf_clearance) : '';
-        if (!name || !token || !cf_clearance || cf_clearance.length < 30) {
+
+        const settings = readJson(SETTINGS_FILE, {});
+        const globalCf = (settings && settings.cf_clearance) || '';
+        const effectiveCf = cf_clearance || globalCf;
+
+        if (!name || !token) {
           res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
-          res.end(JSON.stringify({ error: 'name, token and cf_clearance required' }));
+          res.end(JSON.stringify({ error: 'name and token required' }));
           return;
         }
+
+        if (!effectiveCf || effectiveCf.length < 30) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ error: 'A valid cf_clearance is required (either per-account or global)' }));
+          return;
+        }
+
         const accounts = readJson(ACCOUNTS_FILE, []);
         try {
-          const dup = accounts.find(a => a && typeof a.cf_clearance === 'string' && a.cf_clearance === cf_clearance);
-          if (dup) {
-            res.writeHead(409, { 'Content-Type': 'application/json; charset=utf-8' });
-            res.end(JSON.stringify({ error: 'cf_clearance already used' }));
-            return;
+          // Chỉ kiểm tra trùng lặp nếu cf_clearance riêng được cung cấp
+          if (cf_clearance) {
+            const dup = accounts.find(a => a && typeof a.cf_clearance === 'string' && a.cf_clearance === cf_clearance);
+            if (dup) {
+              res.writeHead(409, { 'Content-Type': 'application/json; charset=utf-8' });
+              res.end(JSON.stringify({ error: 'cf_clearance already used' }));
+              return;
+            }
           }
         } catch {}
+
         const account = { id: Date.now(), name, token, cf_clearance, pixelCount: null, pixelMax: null, droplets: null, extraColorsBitmap: null, active: false, autobuy: null };
+
         try {
-          const me = await fetchMe(cf_clearance, token);
+          const me = await fetchMe(effectiveCf, token); // Sử dụng effectiveCf
           if (me && me.charges) {
             account.pixelCount = Number(me.charges.count);
             account.pixelMax = Number(me.charges.max);
@@ -895,7 +946,12 @@ function startServer(port, host) {
           }
           if (me && me.name && !name) account.name = String(me.name);
         } catch {}
-        try { if (!account.cf_clearance || account.cf_clearance.length < 30) account.active = false; } catch {}
+
+        // Kiểm tra cuối cùng để đảm bảo active status là đúng
+        if (!effectiveCf || effectiveCf.length < 30) {
+            account.active = false;
+        }
+
         accounts.push(account);
         writeJson(ACCOUNTS_FILE, accounts);
         res.writeHead(201, { 'Content-Type': 'application/json; charset=utf-8' });
