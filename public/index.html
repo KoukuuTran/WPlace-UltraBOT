@@ -5970,16 +5970,17 @@ function loadImage(area, no, preserveView = false) {
         }
         try {
           try { await loadAccounts(); } catch {}
-          const dup = Array.isArray(accountsData) && accountsData.find(row => {
-            if (!row) return false;
-            const sameId = (id && String(row.id) === id);
-            return !sameId && String(row.token || '') === token;
-          });
-          if (dup) {
-            showToast(t('messages.tokenAlreadyExists'), 'error', 2500);
-            return;
-          }
-
+          try {
+            const dup = Array.isArray(accountsData) && accountsData.find(row => {
+              if (!row) return false;
+              const sameId = (id && String(row.id) === id);
+              return !sameId && String(row.token || '') === token;
+            });
+            if (dup) {
+              showToast(t('messages.tokenAlreadyExists'), 'error', 2500);
+              return;
+            }
+          } catch {}
           if (id) {
             const res = await fetch('/api/accounts/' + id, {
               method: 'PUT',
@@ -5994,16 +5995,7 @@ function loadImage(area, no, preserveView = false) {
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ name, token, cf_clearance })
             });
-            if (!res.ok) {
-
-                try {
-                    const errorData = await res.json();
-                    showToast(errorData.error || 'Failed to add account.', 'error');
-                } catch {
-                    showToast('Failed to add account.', 'error');
-                }
-                return;
-            }
+            if (!res.ok) return;
             try {
               const created = await res.json();
               if (created && created.id != null) {
@@ -6013,10 +6005,7 @@ function loadImage(area, no, preserveView = false) {
           }
           await loadAccounts();
           showAccountList();
-        } catch(e) {
-            console.error('Error saving account:', e);
-            showToast('An unexpected error occurred.', 'error');
-        }
+        } catch {}
       });
     }
     let accountTokenInputDebounce = null;
