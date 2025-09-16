@@ -807,16 +807,6 @@
     #favorites-list .favorite-item { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; }
     #btn-favorite-star { font-size: 16px; padding: 6px 8px; }
     #btn-favorite-star.saved { color: gold; }
-
-    #brush-div {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    input#brush-size {
-        margin-left: 10px;
-    }    
   </style>
 </head>
 <body>
@@ -850,11 +840,7 @@
         <div id="ready-popup" hidden>
           <div class="ready-header">
             <button id="btn-ready-account" class="app-btn" type="button" data-i18n="ready.selectAccount">Hesap seç</button>
-            <div id="ready-pixel" role="status" aria-live="polite" data-i18n-dynamic="pixel.powerLabel" data-count="0" data-max="0">Piksel gücü: 0 / 0</div>       
-          </div>
-          <div id="brush-div">
-            <div data-i18n="pixel.brushSize">Brush Size:</div>
-            <input id="brush-size" type="number" min="0">     
+            <div id="ready-pixel" role="status" aria-live="polite" data-i18n-dynamic="pixel.powerLabel" data-count="0" data-max="0">Piksel gücü: 0 / 0</div>
           </div>
           <div class="controls-row" id="auto-mode-controls">
             <div class="select-mode-wrap">
@@ -874,7 +860,7 @@
           </div>
           <div id="ready-account-list" hidden></div>
           <div class="controls-row" hidden>
-            <button id="btn-auto-select-accounts" class="app-btn" type="button" data-i18n="ready.autoSelectAccounts">Auto fselect account</button>
+            <button id="btn-auto-select-accounts" class="app-btn" type="button" data-i18n="ready.autoSelectAccounts">Auto select account</button>
           </div>
           <div class="controls-row">
             <input id="ready-token-input" type="text" placeholder="Token" data-i18n-placeholder="ready.tokenPlaceholder" />
@@ -906,7 +892,6 @@
         <button id="btn-shop-back" class="app-btn modal-back" type="button" data-i18n="buttons.back" hidden>Geri</button>
         <button id="tab-accounts" class="tab-button active" type="button" data-i18n="tabs.accounts">Hesaplar</button>
         <button id="tab-settings" class="tab-button" type="button" data-i18n="tabs.settings">Settings</button>
-
         <div id="shop-droplets-info" class="app-btn modal-right-info" hidden>💧 Droplets: -</div>
       </div>
       <div class="modal-body">
@@ -993,6 +978,10 @@
               <div class="shop-desc" style="margin-top:8px;" data-i18n="shop.exclusive">Exclusive palette</div>
               <div id="shop-premium-palette" class="shop-palette-grid" aria-label="Premium color palette"></div>
               <div id="shop-premium-buy" class="shop-pill" role="button" tabindex="0" data-i18n="shop.buyPremium">💧 2000 Droplets</div>
+              <div class="shop-auto-wrap">
+                <span class="select-mode-label" data-i18n="shop.autoBuy">Auto-buy</span>
+                <button class="select-mode-track" id="shop-premium-auto" type="button" role="switch" aria-checked="false" aria-label="Auto-buy"><span class="select-mode-knob"></span></button>
+              </div>
             </div>
           </div>
         </div>
@@ -1020,14 +1009,22 @@
                 <button class="select-mode-track" id="autobuy-all-rec" type="button" role="switch" aria-checked="false" aria-label="Autobuy for all accounts"><span class="select-mode-knob"></span></button>
               </div>
             </div>
+            <div class="shop-card">
+              <div class="shop-icon">🌈</div>
+              <div class="shop-name" data-i18n="shop.premiumTitle">Premium Colors</div>
+              <div class="shop-desc" data-i18n="autobuy.premiumDesc">Automatically buy missing premium colors</div>
+              <div class="shop-auto-wrap">
+                <span class="select-mode-label" data-i18n="shop.autoBuy">Autobuy for ALL</span>
+                <button class="select-mode-track" id="autobuy-all-premium" type="button" role="switch" aria-checked="false" aria-label="Autobuy for all accounts"><span class="select-mode-knob"></span></button>
+              </div>
+            </div>
           </div>
         </div>
-        
         <div id="settings-section" hidden>
           <label class="settings-title" data-i18n="settings.title">cf_clearance for empty accounts</label>
             <div class="form-grid">
-                <label for="global-cf-input" data-i18n="settings.globalCfClearanceLabel">cf_clearance general</label>
-                <input id="global-cf-input" type="text" placeholder="e.g., your_cf_clearance_token...">
+                <label for="general-cf-input" data-i18n="settings.globalCfClearanceLabel">cf_clearance general</label>
+                <input id="general-cf-input" type="text" placeholder="e.g., your_cf_clearance_token...">
             </div>
             <div class="modal-footer">
                 <button id="btn-settings-save" class="app-btn" type="button" data-i18n="buttons.saveSettings">Save</button>
@@ -1392,8 +1389,6 @@
     const saveFavClose = document.getElementById('save-fav-close');
     const favNameInput = document.getElementById('fav-name-input');
     const favSaveBtn = document.getElementById('fav-save-btn');
-    const brushSize = document.getElementById('brush-size');
-    brushSize.value = '0'
 
     let favoritesCache = [];
     async function refreshFavorites(){
@@ -1997,7 +1992,7 @@
 
     const tabSettings = document.getElementById('tab-settings');
     const settingsSection = document.getElementById('settings-section');
-    const globalCfInput = document.getElementById('global-cf-input');
+    const globalCfInput = document.getElementById('general-cf-input');
     const settingsSaveBtn = document.getElementById('btn-settings-save');
     
     const accountsTbody = document.getElementById('accounts-tbody');
@@ -2015,6 +2010,7 @@
     const shopRecPriceEl = document.getElementById('shop-rec-price');
     const shopMaxAutoBtn = document.getElementById('shop-max-auto');
     const shopRecAutoBtn = document.getElementById('shop-rec-auto');
+    const shopPremiumAutoBtn = document.getElementById('shop-premium-auto');
     const shopPremiumPaletteWrap = document.getElementById('shop-premium-palette');
     const shopPremiumOwnedWrap = document.getElementById('shop-premium-owned');
     const shopPremiumBuyBtn = document.getElementById('shop-premium-buy');
@@ -4947,34 +4943,15 @@ function loadImage(area, no, preserveView = false) {
       render();
     }
 
-    function showSettingsTab() {
-      if (!tabSettings) return;
-      tabSettings.classList.add('active');
-      if (tabAccounts) tabAccounts.classList.remove('active');
-
-      if (accountsSection) accountsSection.hidden = true;
-      if (accountFormSection) accountFormSection.hidden = true;
-      if (shopViewSection) shopViewSection.hidden = true;
-      if (autobuyAllViewSection) autobuyAllViewSection.hidden = true;
-      if (settingsSection) settingsSection.hidden = false;
-
-      if (shopBackBtn) shopBackBtn.hidden = true;
-      if (shopDropletsInfo) shopDropletsInfo.hidden = true;
+    if (tabAccounts) {
+      tabAccounts.addEventListener('click', () => showModalView('accounts'));
     }
     if (tabSettings) {
       tabSettings.addEventListener('click', () => showSettingsTab());
     }
-    accountsBtn.addEventListener('click', async () => {
+    accountsBtn.addEventListener('click', () => {
       accountsModal.hidden = false;
-      setAccountsActiveTab();
-      // Thêm khối try-catch này
-      try {
-        const res = await fetch('/api/settings');
-        const settings = await res.json();
-        if (globalCfInput && settings && settings.cf_clearance) {
-          globalCfInput.value = settings.cf_clearance;
-        }
-      } catch {}
+      showModalView('accounts'); // Gọi hàm quản lý trung tâm
     });
     if (settingsSaveBtn) {
       settingsSaveBtn.addEventListener('click', async () => {
@@ -4995,18 +4972,9 @@ function loadImage(area, no, preserveView = false) {
         }
       });
     }
-    function setAccountsActiveTab(){
-      if (!tabAccounts) return;
-      tabAccounts.classList.add('active');
-      if (tabSettings) tabSettings.classList.remove('active');
-
-      if (settingsSection) settingsSection.hidden = true;
-      if (accountsSection) accountsSection.hidden = false;
-      if (accountFormSection) accountFormSection.hidden = true;
-      if (shopViewSection) shopViewSection.hidden = true;
-    }
-    if (tabAccounts) {
-      tabAccounts.addEventListener('click', () => setAccountsActiveTab());
+    
+    if (tabSettings) {
+      tabSettings.addEventListener('click', () => showModalView('settings'));
     }
     accountsBtn.addEventListener('click', async () => {
       accountsModal.hidden = false;
@@ -5039,6 +5007,60 @@ function loadImage(area, no, preserveView = false) {
       } catch {}
       
       try { accountSaveBtn.textContent = t('buttons.save'); } catch {}
+    }
+
+    function showModalView(viewName, data) {
+
+      if (accountsSection) accountsSection.hidden = true;
+      if (accountFormSection) accountFormSection.hidden = true;
+      if (shopViewSection) shopViewSection.hidden = true;
+      if (autobuyAllViewSection) autobuyAllViewSection.hidden = true;
+      if (settingsSection) settingsSection.hidden = true;
+
+      if (shopBackBtn) shopBackBtn.hidden = true;
+      if (shopDropletsInfo) shopDropletsInfo.hidden = true;
+
+      if (tabAccounts) tabAccounts.classList.remove('active');
+      if (tabSettings) tabSettings.classList.remove('active');
+      
+      switch (viewName) {
+        case 'accounts':
+          if (accountsSection) accountsSection.hidden = false;
+          if (tabAccounts) tabAccounts.classList.add('active');
+          try { accountSaveBtn.textContent = t('buttons.add'); } catch {}
+          break;
+        case 'accountForm':
+          if (accountFormSection) accountFormSection.hidden = false;
+          if (tabAccounts) tabAccounts.classList.add('active');
+          if (data) {
+            openEditAccount(data);
+          } else {
+            try {
+              accountNameInput.value = '';
+              accountTokenInput.value = '';
+              if (accountCfInput) accountCfInput.value = '';
+              accountIdInput.value = '';
+              accountNameInput.focus();
+            } catch {}
+          }
+          break;
+        case 'shop':
+          if (shopViewSection) shopViewSection.hidden = false;
+          if (tabAccounts) tabAccounts.classList.add('active');
+          if (shopBackBtn) shopBackBtn.hidden = false;
+          if (data) openShopAccount(data);
+          break;
+        case 'autobuyAll':
+          if (autobuyAllViewSection) autobuyAllViewSection.hidden = false;
+          if (tabAccounts) tabAccounts.classList.add('active');
+          if (shopBackBtn) shopBackBtn.hidden = false;
+          updateAutobuyAllUi();
+          break;
+        case 'settings':
+          if (settingsSection) settingsSection.hidden = false;
+          if (tabSettings) tabSettings.classList.add('active');
+          break;
+      }
     }
     const PREMIUM_PALETTE = [
       { id: 1, label: 'Black', rgb: [0, 0, 0] },
@@ -5567,40 +5589,76 @@ function loadImage(area, no, preserveView = false) {
     function updateShopAutobuyUi(){
       const val = shopCurrentAccount && shopCurrentAccount.autobuy;
       try {
-        const onMax = val === 'max';
+        const onMax = val && val.max;
         if (shopMaxAutoBtn) {
           shopMaxAutoBtn.setAttribute('aria-checked', onMax ? 'true' : 'false');
           shopMaxAutoBtn.classList.toggle('on', onMax);
         }
-        const onRec = val === 'rec';
+        const onRec = val && val.rec;
         if (shopRecAutoBtn) {
           shopRecAutoBtn.setAttribute('aria-checked', onRec ? 'true' : 'false');
           shopRecAutoBtn.classList.toggle('on', onRec);
         }
-      } catch {}
-    }
-
-    async function toggleAutobuy(which){
-      const account = shopCurrentAccount;
-      if (!account) return;
-      const newVal = account.autobuy === which ? null : which;
-      try {
-        const res = await fetch('/api/accounts/' + encodeURIComponent(String(account.id)), {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ autobuy: newVal })
-        });
-        const data = await res.json();
-        if (res.ok && data) {
-          shopCurrentAccount = data;
-          const idx = Array.isArray(accountsData) ? accountsData.findIndex(a => a && a.id === data.id) : -1;
-          if (idx !== -1) accountsData[idx] = data;
-          updateShopAutobuyUi();
+        const onPremium = val && val.premium;
+        if (shopPremiumAutoBtn) {
+          shopPremiumAutoBtn.setAttribute('aria-checked', onPremium ? 'true' : 'false');
+          shopPremiumAutoBtn.classList.toggle('on', onPremium);
         }
       } catch {}
     }
 
+    async function toggleAutobuy(which) {
+      const account = shopCurrentAccount;
+      if (!account) return;
+
+      if (!account.autobuy || typeof account.autobuy !== 'object') {
+        account.autobuy = {};
+      }
+
+      const oldAutobuyState = { ...account.autobuy };
+      const changes = {};
+
+      if (which === 'max') {
+        changes.max = !account.autobuy.max;
+        if (changes.max) changes.rec = false;
+      } else if (which === 'rec') {
+        changes.rec = !account.autobuy.rec;
+        if (changes.rec) changes.max = false;
+      } else if (which === 'premium') {
+        changes.premium = !account.autobuy.premium;
+      }
+
+      Object.assign(account.autobuy, changes);
+      updateShopAutobuyUi();
+
+      try {
+        const res = await fetch('/api/accounts/' + encodeURIComponent(String(account.id)), {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ autobuy: changes })
+        });
+
+        if (!res.ok) {
+          throw new Error('Server returned an error');
+        }
+        
+        const idx = accountsData.findIndex(a => a && a.id === account.id);
+        if (idx !== -1) {
+            if (!accountsData[idx].autobuy || typeof accountsData[idx].autobuy !== 'object') {
+                accountsData[idx].autobuy = {};
+            }
+            Object.assign(accountsData[idx].autobuy, changes);
+        }
+
+      } catch (err) {
+        showToast('Lỗi: Không thể lưu cài đặt autobuy.', 'error');
+        account.autobuy = oldAutobuyState;
+        updateShopAutobuyUi();
+      }
+    }
+
     // Wire buttons
+    if (shopPremiumAutoBtn) shopPremiumAutoBtn.addEventListener('click', () => toggleAutobuy('premium'));
     if (shopMaxDecBtn) shopMaxDecBtn.addEventListener('click', () => changeQty('max', -1));
     if (shopMaxIncBtn) shopMaxIncBtn.addEventListener('click', () => changeQty('max', +1));
     if (shopMaxMaxBtn) shopMaxMaxBtn.addEventListener('click', () => setMaxAffordable('max'));
@@ -5713,6 +5771,7 @@ function loadImage(area, no, preserveView = false) {
       try {
           const countEl = document.getElementById('account-count');
           if (countEl) {
+              countEl.setAttribute('data-count', accountsData.length);
               const total = Array.isArray(sortedRows) ? sortedRows.length : 0;
               const active = Array.isArray(sortedRows) ? sortedRows.filter(r => r && r.active !== false && !!r.token).length : 0;
               countEl.setAttribute('data-count', String(total));
@@ -5728,7 +5787,6 @@ function loadImage(area, no, preserveView = false) {
       } catch (e) {
           console.error("Failed to update account count:", e);
       }
-
       try { recomputeActivePalette(); } catch {}
       accountsTbody.innerHTML = '';
       sortedRows.forEach(row => {
@@ -5783,22 +5841,19 @@ function loadImage(area, no, preserveView = false) {
         shopBtn.type = 'button';
         shopBtn.className = 'app-btn';
         shopBtn.textContent = t('buttons.shop');
-        // Disable shop for inactive accounts
+
         try { shopBtn.disabled = !isActive; } catch {}
         shopBtn.addEventListener('click', async () => {
           if (shopBtn.disabled) return;
-          try { shopBtn.disabled = true; } catch {}
-          try {
-            const res = await fetch('/api/accounts/' + row.id + '/refresh', { method: 'POST' });
-            
-          } catch {}
-          try { await loadAccounts(); } catch {}
-          try {
-            const updated = Array.isArray(accountsData) ? accountsData.find(r => r && r.id === row.id) : null;
-            const isActive = updated && updated.active !== false;
-            if (!isActive) { return; }
-            openShopAccount(updated);
-          } finally { try { shopBtn.disabled = false; } catch {} }
+
+          const account = Array.isArray(accountsData) ? accountsData.find(r => r && r.id === row.id) : null;
+          
+          if (account && account.active !== false) {
+            openShopAccount(account);
+          } else {
+
+            showToast('Tài khoản không hoạt động hoặc không tìm thấy.', 'error');
+          }
         });
         const delBtn = document.createElement('button');
         delBtn.type = 'button';
@@ -5913,19 +5968,19 @@ function loadImage(area, no, preserveView = false) {
           showToast('Account name and token are required.', 'error', 2500);
           return;
         }
-
         try {
           try { await loadAccounts(); } catch {}
-          const dup = Array.isArray(accountsData) && accountsData.find(row => {
-            if (!row) return false;
-            const sameId = (id && String(row.id) === id);
-            return !sameId && String(row.token || '') === token;
-          });
-          if (dup) {
-            showToast(t('messages.tokenAlreadyExists'), 'error', 2500);
-            return;
-          }
-
+          try {
+            const dup = Array.isArray(accountsData) && accountsData.find(row => {
+              if (!row) return false;
+              const sameId = (id && String(row.id) === id);
+              return !sameId && String(row.token || '') === token;
+            });
+            if (dup) {
+              showToast(t('messages.tokenAlreadyExists'), 'error', 2500);
+              return;
+            }
+          } catch {}
           if (id) {
             const res = await fetch('/api/accounts/' + id, {
               method: 'PUT',
@@ -5940,16 +5995,7 @@ function loadImage(area, no, preserveView = false) {
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ name, token, cf_clearance })
             });
-            if (!res.ok) {
-
-                try {
-                    const errorData = await res.json();
-                    showToast(errorData.error || 'Failed to add account.', 'error');
-                } catch {
-                    showToast('Failed to add account.', 'error');
-                }
-                return;
-            }
+            if (!res.ok) return;
             try {
               const created = await res.json();
               if (created && created.id != null) {
@@ -5959,10 +6005,7 @@ function loadImage(area, no, preserveView = false) {
           }
           await loadAccounts();
           showAccountList();
-        } catch(e) {
-            console.error('Error saving account:', e);
-            showToast('An unexpected error occurred.', 'error');
-        }
+        } catch {}
       });
     }
     let accountTokenInputDebounce = null;
@@ -7447,7 +7490,6 @@ if (autoMode && assignedCount > 0 && !hadRequestError) {
       }
       showToast(t('messages.maxPixelsReached', { limit }), 'error', 2000);
     }
-
     function selectLocalPixelsInRadius(selItem, centerX, centerY, radius) {
       if (!selItem || !selItem.image || !selItem.image.complete) return false;
 
@@ -7503,6 +7545,7 @@ if (autoMode && assignedCount > 0 && !hadRequestError) {
                       continue;
                   }
               }
+
               // Finally add pixel to selection
               const didAdd = addPixelSelection(selItem, lx, ly, selectedOverrideColorId != null ? selectedOverrideColorId : null);
               if (didAdd) {
@@ -7586,8 +7629,7 @@ if (autoMode && assignedCount > 0 && !hadRequestError) {
         if (!selItem || !selItem.image || !selItem.image.complete) return false;
         const lx = readyHoverPixel.x|0;
         const ly = readyHoverPixel.y|0;
-        const radius = event.shiftKey ? brushSize.value : 0; // Increase radius if shift is held down
-        if (brushSize.value == "") radius = 0;
+        const radius = event.shiftKey ? 5 : 0; // 5px radius selection if shift is held
 
         const result = selectLocalPixelsInRadius(selItem, lx, ly, radius);
 
@@ -7666,8 +7708,7 @@ if (autoMode && assignedCount > 0 && !hadRequestError) {
         if (!selItem || !selItem.image || !selItem.image.complete) return false;
         const lx = readyHoverPixel.x|0;
         const ly = readyHoverPixel.y|0;
-        const radius = event.shiftKey ? brushSize.value : 0; // Increase radius if shift is held down
-        if (brushSize.value == "") radius = 0;
+        const radius = event.shiftKey ? 5 : 0; // 5px radius selection if shift is held
 
         const result = removeLocalPixelsInRadius(selItem, lx, ly, radius);
 
@@ -7851,49 +7892,84 @@ if (autoMode && assignedCount > 0 && !hadRequestError) {
     const autobuyAllViewSection = document.getElementById('autobuy-all-view-section');
     const autobuyAllMaxBtn = document.getElementById('autobuy-all-max');
     const autobuyAllRecBtn = document.getElementById('autobuy-all-rec');
+    const autobuyAllPremiumBtn = document.getElementById('autobuy-all-premium');
 
     function updateAutobuyAllUi() {
-      if (!accountsData || !autobuyAllMaxBtn || !autobuyAllRecBtn) return;
+      if (!accountsData || !autobuyAllMaxBtn || !autobuyAllRecBtn || !autobuyAllPremiumBtn) return;
 
-      const maxOn = accountsData.some(acc => acc && acc.autobuy === 'max');
-      const recOn = accountsData.some(acc => acc && acc.autobuy === 'rec');
+      const maxOn = accountsData.some(acc => acc && acc.autobuy && acc.autobuy.max);
+      const recOn = accountsData.some(acc => acc && acc.autobuy && acc.autobuy.rec);
+      const premiumOn = accountsData.some(acc => acc && acc.autobuy && acc.autobuy.premium);
 
       autobuyAllMaxBtn.classList.toggle('on', maxOn);
       autobuyAllMaxBtn.setAttribute('aria-checked', maxOn ? 'true' : 'false');
 
       autobuyAllRecBtn.classList.toggle('on', recOn);
       autobuyAllRecBtn.setAttribute('aria-checked', recOn ? 'true' : 'false');
+      
+      autobuyAllPremiumBtn.classList.toggle('on', premiumOn);
+      autobuyAllPremiumBtn.setAttribute('aria-checked', premiumOn ? 'true' : 'false');
     }
 
     async function setAutobuyForAll(which) {
-
       if (!accountsData || accountsData.length === 0) {
-        showToast('No accounts available.', 'error');
+        showToast('Không có tài khoản nào.', 'error');
         return;
       }
 
-      const currentlyOn = accountsData.some(acc => acc && acc.autobuy === which);
-      const newAutobuyValue = currentlyOn ? null : which;
-      const statusText = newAutobuyValue ? newAutobuyValue.toUpperCase() : 'OFF';
+      const currentlyOn = accountsData.some(acc => acc && acc.autobuy && acc.autobuy[which]);
+      const turnOn = !currentlyOn;
+      const newChanges = {};
 
-      showToast(`Setting autobuy ${statusText} for ${which} on all accounts...`, 'success', 4000);
+      if (which === 'max') {
+        newChanges.max = turnOn;
+        if (turnOn) newChanges.rec = false;
+      } else if (which === 'rec') {
+        newChanges.rec = turnOn;
+        if (turnOn) newChanges.max = false;
+      } else if (which === 'premium') {
+        newChanges.premium = turnOn;
+      }
 
-      const updatePromises = accountsData.map(account => {
-        if (!account || !account.id) {
-          return Promise.resolve(); 
+      const oldStates = accountsData.map(acc => ({ id: acc.id, autobuy: acc.autobuy ? { ...acc.autobuy } : {} }));
+
+      accountsData.forEach(acc => {
+        if (acc) {
+          if (!acc.autobuy || typeof acc.autobuy !== 'object') {
+            acc.autobuy = {};
+          }
+          Object.assign(acc.autobuy, newChanges);
         }
-        return fetch('/api/accounts/' + encodeURIComponent(String(account.id)), {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ autobuy: newAutobuyValue })
-        }).catch(err => console.error(`Failed to update account ${account.id}:`, err));
       });
-
-      await Promise.all(updatePromises);
-
-      await loadAccounts();
       updateAutobuyAllUi();
-      showToast('Bulk autobuy update complete!', 'success', 2000);
+      showToast(`Đang cập nhật autobuy cho tất cả tài khoản...`, 'success', 2000);
+
+      try {
+        const updatePromises = accountsData.map(account => {
+          if (!account || !account.id) return Promise.resolve();
+          return fetch('/api/accounts/' + encodeURIComponent(String(account.id)), {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ autobuy: newChanges })
+          });
+        });
+        
+        const results = await Promise.all(updatePromises);
+        if (results.some(res => res && !res.ok)) {
+          throw new Error('Một hoặc nhiều tài khoản cập nhật thất bại.');
+        }
+        showToast('Đã cập nhật autobuy hàng loạt thành công!', 'success', 2000);
+      } catch (err) {
+        showToast('Lỗi: Cập nhật autobuy hàng loạt thất bại. Đang hoàn tác.', 'error');
+        accountsData.forEach(acc => {
+          const oldState = oldStates.find(old => old.id === acc.id);
+          if (oldState) {
+            acc.autobuy = oldState.autobuy;
+          }
+        });
+        updateAutobuyAllUi();
+        await loadAccounts();
+      }
     }
 
       if (autobuyAllBtn) {
@@ -7901,6 +7977,8 @@ if (autoMode && assignedCount > 0 && !hadRequestError) {
           if (accountsSection) accountsSection.hidden = true;
           if (autobuyAllViewSection) autobuyAllViewSection.hidden = false;
           if (shopBackBtn) shopBackBtn.hidden = false;
+          if (tabAccounts) tabAccounts.classList.add('active');
+          if (tabSettings) tabSettings.classList.remove('active');
           updateAutobuyAllUi();
         });
       }
@@ -7911,7 +7989,10 @@ if (autoMode && assignedCount > 0 && !hadRequestError) {
     if (autobuyAllRecBtn) {
       autobuyAllRecBtn.addEventListener('click', () => setAutobuyForAll('rec'));
     }
-  
+    if (autobuyAllPremiumBtn) {
+      autobuyAllPremiumBtn.addEventListener('click', () => setAutobuyForAll('premium'));
+    }
+
   </script>
 </body>
 </html> 

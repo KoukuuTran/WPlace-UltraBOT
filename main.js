@@ -326,72 +326,32 @@ async function purchaseProduct(cf_clearance, token, productId, amount) {
     }
   });
 }
+async function purchaseColor(token, productId, amount, variant) {
+  const res = await fetch('http://localhost:3000/api/purchase', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      productId,
+      amount,
+      variant,
+      j: token
+    })
+  });
 
-// Refresh function for DNR purposes.
-async function refreshAccount(account) {
-  if (!account) return account;
-
-  const settings = readJson(SETTINGS_FILE, {});
-  const globalCf = (settings && settings.cf_clearance) || '';
-  const cf = account.cf_clearance || globalCf;
-  if (!cf || cf.length < 30 || !account.token) {
-    account.active = false;
-    return account;
-  }
-
-  debugLog(`[Refresh] Checking account: "${account.name}"`);
-  let me = null;
+  let data;
   try {
-    me = await fetchMe(cf, account.token);
-  } catch (err) {
-    debugLog(`[Refresh] Fetch error for account "${account.name}":`, err.message);
-    account.active = false;
-    return account;
+    data = await res.json();
+  } catch (e) {
+    throw new Error(`Invalid JSON from server: ${await res.text()}`);
   }
 
-  if (me && me.charges) {
-    account.pixelCount = Math.floor(Number(me.charges.count));
-    account.pixelMax = Math.floor(Number(me.charges.max));
-    account.active = true;
-  } else {
-    account.active = false;
+  if (!res.ok || !data || data.success !== true) {
+    throw new Error(
+      `Purchase failed. Status: ${res.status}, Error: ${data?.error}, Data: ${JSON.stringify(data)}`
+    );
   }
-
-  if (me && Object.prototype.hasOwnProperty.call(me, 'droplets')) {
-    const d = Number(me.droplets);
-    account.droplets = Number.isFinite(d) ? Math.floor(d) : null;
-  }
-  if (me && Object.prototype.hasOwnProperty.call(me, 'extraColorsBitmap')) {
-    const b = Number(me.extraColorsBitmap);
-    account.extraColorsBitmap = Number.isFinite(b) ? Math.floor(b) : null;
-  }
-
-  if (account.active && (account.autobuy === 'max' || account.autobuy === 'rec')) {
-    const price = 500;
-    const productId = account.autobuy === 'max' ? 70 : 80;
-    const droplets = Number(account.droplets || 0);
-    const qty = Math.floor(droplets / price);
-
-    if (qty > 0) {
-      const ok = await purchaseProduct(cf, account.token, productId, qty);
-      if (ok) {
-        const me2 = await fetchMe(cf, account.token);
-        if (me2) {
-            if(me2.charges) {
-                account.pixelCount = Math.floor(Number(me2.charges.count));
-                account.pixelMax = Math.floor(Number(me2.charges.max));
-            }
-            if(Object.prototype.hasOwnProperty.call(me2, 'droplets')) {
-                account.droplets = Math.floor(Number(me2.droplets));
-            }
-        }
-      }
-    }
-  }
-
-  return account;
+  return data;
 }
-
 
 function startServer(port, host) {
   const server = http.createServer((req, res) => {
@@ -800,13 +760,12 @@ function startServer(port, host) {
     if (parsed.pathname === '/api/accounts' && req.method === 'GET') {
       const accounts = readJson(ACCOUNTS_FILE, []);
       try {
-        const settings = readJson(SETTINGS_FILE, {}); // Đọc settings chung
+        const settings = readJson(SETTINGS_FILE, {});
         const globalCf = (settings && settings.cf_clearance) || '';
-
         for (let i = 0; i < accounts.length; i++) {
           const a = accounts[i];
-          const effectiveCf = (a && a.cf_clearance) || globalCf; // Dùng cf hiệu lực
-          // Chỉ đặt inactive nếu cả cf riêng và chung đều không hợp lệ
+          const effectiveCf = (a && a.cf_clearance) || globalCf;
+
           if (!effectiveCf || effectiveCf.length < 30) { 
             accounts[i] = { ...a, active: false }; 
           }
@@ -853,7 +812,14 @@ function startServer(port, host) {
         }
         if (body.pixelRight != null) updated.pixelRight = body.pixelRight;
         if (typeof body.active === 'boolean') updated.active = body.active;
-        if (body.autobuy === null) { updated.autobuy = null; }
+        if (body.autobuy != null && typeof body.autobuy === 'object') {
+          if (updated.autobuy == null || typeof updated.autobuy !== 'object') {
+            updated.autobuy = {};
+          }
+          Object.assign(updated.autobuy, body.autobuy);
+        } else if (body.autobuy === null) {
+          updated.autobuy = null;
+        }
         try {
           const settings = readJson(SETTINGS_FILE, {});
           const globalCf = (settings && settings.cf_clearance) || '';
@@ -916,7 +882,6 @@ function startServer(port, host) {
 
         const accounts = readJson(ACCOUNTS_FILE, []);
         try {
-          // Chỉ kiểm tra trùng lặp nếu cf_clearance riêng được cung cấp
           if (cf_clearance) {
             const dup = accounts.find(a => a && typeof a.cf_clearance === 'string' && a.cf_clearance === cf_clearance);
             if (dup) {
@@ -926,11 +891,9 @@ function startServer(port, host) {
             }
           }
         } catch {}
-
         const account = { id: Date.now(), name, token, cf_clearance, pixelCount: null, pixelMax: null, droplets: null, extraColorsBitmap: null, active: false, autobuy: null };
-
         try {
-          const me = await fetchMe(effectiveCf, token); // Sử dụng effectiveCf
+          const me = await fetchMe(effectiveCf, token);
           if (me && me.charges) {
             account.pixelCount = Number(me.charges.count);
             account.pixelMax = Number(me.charges.max);
@@ -946,12 +909,9 @@ function startServer(port, host) {
           }
           if (me && me.name && !name) account.name = String(me.name);
         } catch {}
-
-        // Kiểm tra cuối cùng để đảm bảo active status là đúng
         if (!effectiveCf || effectiveCf.length < 30) {
             account.active = false;
         }
-
         accounts.push(account);
         writeJson(ACCOUNTS_FILE, accounts);
         res.writeHead(201, { 'Content-Type': 'application/json; charset=utf-8' });
@@ -962,80 +922,127 @@ function startServer(port, host) {
       });
       return;
     }
-
-
-	// Firefix account syncing endpoint.
-    if (parsed.pathname === '/api/sync-accounts' && req.method === 'POST') {
-      readJsonBody(req).then(async (syncedAccounts) => {
-        if (!Array.isArray(syncedAccounts)) return res.writeHead(400).end();
-
-        try {
-          const accounts = readJson(ACCOUNTS_FILE, []);
-          const accountsMap = new Map(accounts.map(acc => [acc.name, acc]));
-          let updatedCount = 0, addedCount = 0;
-
-          for (const syncedAccount of syncedAccounts) {
-            if (!syncedAccount.name || !syncedAccount.token || !syncedAccount.cf_clearance) continue;
-
-            if (accountsMap.has(syncedAccount.name)) {
-              const accountToUpdate = accountsMap.get(syncedAccount.name);
-              let changed = false;
-              if (accountToUpdate.token !== syncedAccount.token) { accountToUpdate.token = syncedAccount.token; changed = true; }
-              if (accountToUpdate.cf_clearance !== syncedAccount.cf_clearance) { accountToUpdate.cf_clearance = syncedAccount.cf_clearance; changed = true; }
-              if (changed) updatedCount++;
-            } else {
-              addedCount++;
-              const newAccount = {
-                id: Date.now() + addedCount, name: syncedAccount.name,
-                token: syncedAccount.token, cf_clearance: syncedAccount.cf_clearance,
-                pixelCount: null, pixelMax: null, droplets: null, 
-                extraColorsBitmap: null, active: false, autobuy: null
-              };
-              await refreshAccount(newAccount);
-              accountsMap.set(newAccount.name, newAccount);
-            }
-          }
-
-          if (updatedCount > 0 || addedCount > 0) {
-            writeJson(ACCOUNTS_FILE, Array.from(accountsMap.values()));
-            debugLog(`[SYNC] Complete. Updated: ${updatedCount}, Added: ${addedCount}.`);
-            sseBroadcast('accounts_updated', { status: 'refreshed' });
-          } else {
-            debugLog('[SYNC] Complete. No changes necessary.');
-          }
-
-          res.writeHead(204).end();
-        } catch (error) {
-          debugLog('[SYNC] Error during account sync:', error);
-          res.writeHead(500).end();
-        }
-      }).catch(() => res.writeHead(400).end());
-      return;
-    }
-
-    // Modifed and creating a single function to sync accounts for the api function to not repeat.
     if (parsed.pathname && /^\/api\/accounts\/\d+\/refresh$/.test(parsed.pathname) && req.method === 'POST') {
       const parts = parsed.pathname.split('/');
       const id = Number(parts[3]);
-
+      const accounts = readJson(ACCOUNTS_FILE, []);
+      const idx = accounts.findIndex(a => a.id === id);
+      if (idx === -1) { res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8' }); res.end(JSON.stringify({ error: 'not found' })); return; }
+      const acct = accounts[idx];
+      const cf = acct && typeof acct.cf_clearance === 'string' ? acct.cf_clearance : '';
+      if (!cf || cf.length < 30) {
+        try { accounts[idx] = { ...acct, active: false }; writeJson(ACCOUNTS_FILE, accounts); } catch {}
+        res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' }); res.end(JSON.stringify({ error: 'cf_clearance missing for account' })); return; }
       (async () => {
-        const accounts = readJson(ACCOUNTS_FILE, []);
-        const idx = accounts.findIndex(a => a.id === id);
-
-        if (idx === -1) { 
-          res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8' }); 
-          res.end(JSON.stringify({ error: 'not found' })); 
-          return; 
+        debugLog('refresh: begin got-scraping /me fetch', { accountId: id, name: acct && acct.name ? String(acct.name) : undefined });
+        let me = null;
+        try {
+          me = await fetchMe(cf, acct.token);
+        } catch (err) {
+          const msg = (err && err.message) ? String(err.message) : String(err);
+          const code = (err && err.code) ? String(err.code) : '';
+          if (!(code === 'ECONNRESET' || (msg && msg.toUpperCase && msg.toUpperCase().includes('ECONNRESET')))) {
+            console.log('refresh fetch error:', msg);
+          }
         }
+        debugLog('refresh: got-scraping result', {
+          ok: !!me,
+          meta: me ? {
+            name: me.name,
+            charges: me.charges ? { count: me.charges.count, max: me.charges.max } : undefined,
+            droplets: Object.prototype.hasOwnProperty.call(me, 'droplets') ? me.droplets : undefined,
+            extraColorsBitmap: Object.prototype.hasOwnProperty.call(me, 'extraColorsBitmap') ? me.extraColorsBitmap : undefined
+          } : null
+        });
+        if (me && me.charges) {
+          
+          acct.pixelCount = Math.floor(Number(me.charges.count));
+          acct.pixelMax = Math.floor(Number(me.charges.max));
+          acct.active = true;
+        } else {
+          acct.active = false;
+        }
+        if (me && Object.prototype.hasOwnProperty.call(me, 'droplets')) {
+          const d = Number(me.droplets);
+          acct.droplets = Number.isFinite(d) ? Math.floor(d) : null;
+        }
+        if (me && Object.prototype.hasOwnProperty.call(me, 'extraColorsBitmap')) {
+          const b = Number(me.extraColorsBitmap);
+          acct.extraColorsBitmap = Number.isFinite(b) ? Math.floor(b) : null;
+        }
+        if (acct.autobuy && typeof acct.autobuy === 'object') {
 
-        const accountToRefresh = accounts[idx];
-        const refreshedAccount = await refreshAccount(accountToRefresh);
+          if (acct.autobuy.max || acct.autobuy.rec) {
+            const price = 500;
+            const productId = acct.autobuy.max ? 70 : 80; 
+            const droplets = Number(acct.droplets || 0);
+            const qty = Math.floor(droplets / price);
+            if (qty > 0) {
+              const ok = await purchaseProduct(cf, acct.token, productId, qty);
+              if (ok) {
 
-        accounts[idx] = refreshedAccount;
+                const me2 = await fetchMe(cf, acct.token);
+                if (me2) {
+                  if (me2.charges) {
+                    acct.pixelCount = Math.floor(Number(me2.charges.count));
+                    acct.pixelMax = Math.floor(Number(me2.charges.max));
+                    acct.active = true;
+                  } else {
+                    acct.active = false;
+                  }
+                  if (Object.prototype.hasOwnProperty.call(me2, 'droplets')) {
+                    const d2 = Number(me2.droplets);
+                    acct.droplets = Number.isFinite(d2) ? Math.floor(d2) : null;
+                  }
+                  if (Object.prototype.hasOwnProperty.call(me2, 'extraColorsBitmap')) {
+                    const b2 = Number(me2.extraColorsBitmap);
+                    acct.extraColorsBitmap = Number.isFinite(b2) ? Math.floor(b2) : null;
+                  }
+                }
+              }
+            }
+          }
+
+          if (acct.autobuy.premium) {
+            const bitmap = acct.extraColorsBitmap || 0;
+            const owned = [];
+            for (let i = 0; i < 32; i++) {
+              if (bitmap & (1 << i)) owned.push(i + 32);
+            }
+            const missing = [];
+            for (let i = 0; i < 32; i++) {
+              if (!owned.includes(i + 32)) missing.push(i + 32);
+            }
+
+            if (missing.length === 0) {
+              acct.autobuy = "max";
+            } else {
+              const price = 2000;
+              let droplets = Number(acct.droplets || 0);
+              const maxPurchases = Math.min(missing.length, Math.floor(droplets / price));
+              const productId = 100;
+              const qty = 1;
+              let total = 0;
+
+              for (const colorId of missing) {
+                if (total >= maxPurchases) break;
+                try {
+                  total++;
+                  await purchaseColor(acct.token, productId, qty, colorId);
+                  droplets -= price;
+                  console.log('Purchased color', colorId, "for account", acct.name); // TODO: Remove
+                } catch (e) {
+                  console.error('Purchase failed for', colorId, "for account", acct.name,"Error:", e); // TODO: Remove
+                }
+              }
+            }
+          }
+        }
+        accounts[idx] = acct;
         writeJson(ACCOUNTS_FILE, accounts);
         res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-        res.end(JSON.stringify(refreshedAccount));
-      })().catch((e) => {
+        res.end(JSON.stringify(acct));
+      })().catch(() => {
         res.writeHead(502, { 'Content-Type': 'application/json; charset=utf-8' });
         res.end(JSON.stringify({ error: 'upstream error' }));
       });
