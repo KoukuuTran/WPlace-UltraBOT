@@ -12,7 +12,8 @@
 
 ---
 
-> [!NOTE] > **Xin chào, sau khi các biện pháp mới được áp dụng tôi đã quyết định phát triển bot này và hoàn thành chỉ trong một ngày. Do các biện pháp này, hiện tại việc làm một bot hoàn toàn tự động có vẻ không khả thi. ~~Tuy nhiên, thông qua một lỗ hổng hiện có chúng ta có thể gửi 12 tài khoản mỗi giây với một lần xác thực, giả sử các tài khoản đầy, 12 \* 62 = <strong>744</strong> pixel/giây.~~ Lỗ hổng này đã được vá sau cập nhật; vì vậy bây giờ bạn sẽ cần lấy token mới cho mỗi lần gửi của mỗi tài khoản. Nếu bạn sẵn sàng, tôi đã mô tả các bước sử dụng bên dưới.**
+> [!NOTE]
+> **Xin chào, sau khi các biện pháp mới được áp dụng tôi đã quyết định phát triển bot này và hoàn thành chỉ trong một ngày. Do các biện pháp này, hiện tại việc làm một bot hoàn toàn tự động có vẻ không khả thi. ~~Tuy nhiên, thông qua một lỗ hổng hiện có chúng ta có thể gửi 12 tài khoản mỗi giây với một lần xác thực, giả sử các tài khoản đầy, 12 \* 62 = <strong>744</strong> pixel/giây.~~ Lỗ hổng này đã được vá sau cập nhật; vì vậy bây giờ bạn sẽ cần lấy token mới cho mỗi lần gửi của mỗi tài khoản. Nếu bạn sẵn sàng, tôi đã mô tả các bước sử dụng bên dưới.**
 
 ---
 
