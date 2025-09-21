@@ -929,7 +929,9 @@ function startServer(port, host) {
       const idx = accounts.findIndex(a => a.id === id);
       if (idx === -1) { res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8' }); res.end(JSON.stringify({ error: 'not found' })); return; }
       const acct = accounts[idx];
-      const cf = acct && typeof acct.cf_clearance === 'string' ? acct.cf_clearance : '';
+      const settings = readJson(SETTINGS_FILE, {});
+      const globalCf = (settings && settings.cf_clearance) || '';
+      const cf = (acct && acct.cf_clearance) || globalCf;
       if (!cf || cf.length < 30) {
         try { accounts[idx] = { ...acct, active: false }; writeJson(ACCOUNTS_FILE, accounts); } catch {}
         res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' }); res.end(JSON.stringify({ error: 'cf_clearance missing for account' })); return; }

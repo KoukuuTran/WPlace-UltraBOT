@@ -263,13 +263,19 @@ document.addEventListener('DOMContentLoaded', function() {
         for (const storeId of storeIds) {
           const containerName = containers.get(storeId) || 'Default';
 
-          const [jCookieArr, cfCookieArr] = await Promise.all([
-            chrome.cookies.getAll({ name: 'j', domain: 'backend.wplace.live', storeId: storeId }),
-            chrome.cookies.getAll({ name: 'cf_clearance', domain: 'wplace.live', storeId: storeId, partitionKey: { topLevelSite: "https://wplace.live" } })
-          ]);
-
+          const jCookieArr = await chrome.cookies.getAll({ name: 'j', domain: 'backend.wplace.live', storeId: storeId });
           const accountToken = jCookieArr.length > 0 ? jCookieArr[0].value : null;
-          const cfToken = cfCookieArr.length > 0 ? cfCookieArr[0].value : null;
+
+          let cfToken = null;
+          try {
+              const cfCookieArr = await chrome.cookies.getAll({ name: 'cf_clearance', domain: 'wplace.live', storeId: storeId, partitionKey: { topLevelSite: "https://wplace.live" } });
+              if (cfCookieArr.length > 0) {
+                  cfToken = cfCookieArr[0].value;
+              }
+          } catch (e) {
+              console.error("Could not check for cf_clearance cookie:", e);
+              // cfToken will remain null, and we'll proceed
+          }
 
           if (accountToken || cfToken) {
             accountsToSync.push({ name: containerName, token: accountToken, cf_clearance: cfToken });
